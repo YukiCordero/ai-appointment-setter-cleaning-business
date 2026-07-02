@@ -1,0 +1,2249 @@
+{
+  "name": "AI Appointment Setter & Lead Follow-Up System for Cleaning Businesses",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "free-cleaning-business-lead",
+        "options": {
+          "responseData": "{\"success\":true,\"message\":\"Lead received. CleanPro will contact you shortly.\"}"
+        }
+      },
+      "id": "1b609e9a-a3a8-4585-ab38-55ab2da718f5",
+      "name": "Webhook - New Free Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        2048
+      ],
+      "webhookId": "REGENERATED_BY_N8N"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d93de594-7ec7-477a-9fbf-f195305808d1",
+                    "leftValue": "={{$json.lead_score}}",
+                    "rightValue": "Hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hot Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e91a81ca-2647-4c42-b798-ee9826df5715",
+                    "leftValue": "={{$json.lead_score}}",
+                    "rightValue": "Warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Warm Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "85662a29-ffe9-45b4-b4f1-1d57b6eb82e2",
+                    "leftValue": "={{$json.lead_score}}",
+                    "rightValue": "Cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cold Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "69e08ec0-de8a-482f-812e-25181083f057",
+                    "leftValue": "={{$json.lead_score}}",
+                    "rightValue": "Needs Manual Review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Needs Manual Review Lead"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5ff36c51-07cd-4684-94ae-fe3a4f67a102",
+      "name": "Route by Lead Score",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2528,
+        2048
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "02ff714f-8a9b-413f-a882-a2397bc6f8d5",
+              "leftValue": "={{$json.has_bookable_schedule}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0c791e82-44fb-4896-b270-e20998259bbc",
+      "name": "Has Bookable Schedule?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2880,
+        1776
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list",
+          "cachedResultName": "Primary Calendar"
+        },
+        "start": "={{$json.calendar_start}}",
+        "end": "={{$json.calendar_end}}",
+        "additionalFields": {
+          "description": "={{'Service: ' + $json.service_needed + '\\nPhone: ' + $json.phone + '\\nEmail: ' + $json.email + '\\nLead Score: ' + $json.lead_score + '\\nPreferred Schedule: ' + ($json.preferred_schedule_display || $json.preferred_schedule) + '\\nTimezone: ' + ($json.calendar_timezone || 'Asia/Manila') + '\\nSummary: ' + $json.lead_summary}}",
+          "summary": "={{'Cleaning Consultation - ' + $json.full_name}}"
+        }
+      },
+      "id": "edda04a4-339f-42ee-8b31-6b977aa27cf3",
+      "name": "Create Google Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        3168,
+        1760
+      ],
+      "disabled": false,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "html": "={{ '<div style=\"font-family:Arial,sans-serif;line-height:1.5\"><p>' + ($json.email_body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\n\\n/g, '</p><p>').replace(/\\n/g, '<br>') + '</p></div>' }}",
+        "options": {}
+      },
+      "id": "99810f00-bb3b-4320-8165-d6aba97f835b",
+      "name": "Send Hot Booking Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2864,
+        1952
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "html": "={{ '<div style=\"font-family:Arial,sans-serif;line-height:1.5\"><p>' + ($json.email_body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\n\\n/g, '</p><p>').replace(/\\n/g, '<br>') + '</p></div>' }}",
+        "options": {}
+      },
+      "id": "9f97b97a-a3e2-49de-97cd-208ac8d16959",
+      "name": "Send Warm Qualifying Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2880,
+        2176
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "html": "={{ '<div style=\"font-family:Arial,sans-serif;line-height:1.5\"><p>' + ($json.email_body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\n\\n/g, '</p><p>').replace(/\\n/g, '<br>') + '</p></div>' }}",
+        "options": {}
+      },
+      "id": "0b936276-d807-4398-a3c0-f21db805c0bf",
+      "name": "Send Cold Nurture Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2864,
+        2416
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "html": "={{ '<div style=\"font-family:Arial,sans-serif;line-height:1.5\"><p>' + ($json.email_body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\n\\n/g, '</p><p>').replace(/\\n/g, '<br>') + '</p></div>' }}",
+        "options": {}
+      },
+      "id": "343be558-10f3-48bb-9069-e4c27b5caa7c",
+      "name": "Send Manual Review Acknowledgment",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2864,
+        2640
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.owner_email}}",
+        "subject": "={{'Hot Lead: ' + $json.full_name + ' - ' + $json.service_needed}}",
+        "options": {},
+        "html": "={{ '<h2>' + $json.lead_score + ' Lead: ' + $json.full_name + '</h2>' + '<p><strong>Service:</strong> ' + $json.service_needed + '</p>' + '<p><strong>Location:</strong> ' + $json.location + '</p>' + '<p><strong>Phone:</strong> ' + $json.phone + '</p>' + '<p><strong>Email:</strong> ' + $json.email + '</p>' + '<p><strong>Preferred schedule:</strong> ' + $json.preferred_schedule + '</p>' + '<p><strong>Lead summary:</strong> ' + $json.lead_summary + '</p>' + '<p><strong>Recommended action:</strong> ' + $json.recommended_next_action + '</p>' + '<p><strong>Reason:</strong> ' + $json.reason_for_score + '</p>' }}"
+      },
+      "id": "1b3f71b8-66b9-4819-a1a3-3b954678276c",
+      "name": "Notify Owner - Hot",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3168,
+        2080
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.owner_email}}",
+        "subject": "={{'Warm Lead: ' + $json.full_name + ' - ' + $json.service_needed}}",
+        "options": {},
+        "html": "={{ '<h2>' + $json.lead_score + ' Lead: ' + $json.full_name + '</h2>' + '<p><strong>Service:</strong> ' + $json.service_needed + '</p>' + '<p><strong>Location:</strong> ' + $json.location + '</p>' + '<p><strong>Phone:</strong> ' + $json.phone + '</p>' + '<p><strong>Email:</strong> ' + $json.email + '</p>' + '<p><strong>Preferred schedule:</strong> ' + $json.preferred_schedule + '</p>' + '<p><strong>Lead summary:</strong> ' + $json.lead_summary + '</p>' + '<p><strong>Recommended action:</strong> ' + $json.recommended_next_action + '</p>' + '<p><strong>Reason:</strong> ' + $json.reason_for_score + '</p>' }}"
+      },
+      "id": "6a6c4e0d-7a43-439c-8712-8d87a57021fe",
+      "name": "Notify Owner - Warm",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3184,
+        2272
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@your-cleaning-business.com",
+        "toEmail": "={{$json.owner_email}}",
+        "subject": "={{'Manual Review Needed: ' + $json.full_name}}",
+        "options": {},
+        "html": "={{ '<h2>' + $json.lead_score + ' Lead: ' + $json.full_name + '</h2>' + '<p><strong>Service:</strong> ' + $json.service_needed + '</p>' + '<p><strong>Location:</strong> ' + $json.location + '</p>' + '<p><strong>Phone:</strong> ' + $json.phone + '</p>' + '<p><strong>Email:</strong> ' + $json.email + '</p>' + '<p><strong>Preferred schedule:</strong> ' + $json.preferred_schedule + '</p>' + '<p><strong>Lead summary:</strong> ' + $json.lead_summary + '</p>' + '<p><strong>Recommended action:</strong> ' + $json.recommended_next_action + '</p>' + '<p><strong>Reason:</strong> ' + $json.reason_for_score + '</p>' }}"
+      },
+      "id": "84dd6776-832c-44e7-8f63-0847cad4dd03",
+      "name": "Notify Owner - Manual Review",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3168,
+        2640
+      ],
+      "webhookId": "REGENERATED_BY_N8N",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date Submitted": "={{ $json.date_submitted }}",
+            "Full Name": "={{ $json.full_name }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Service Needed": "={{ $json.service_needed }}",
+            "Property Type": "={{ $json.property_type }}",
+            "Location": "={{ $json.location }}",
+            "Preferred Schedule": "={{ $json.preferred_schedule }}",
+            "Budget Range": "={{ $json.budget_range }}",
+            "Urgency": "={{ $json.urgency }}",
+            "Source": "={{ $json.source }}",
+            "Lead Score": "={{ $json.lead_score }}",
+            "Urgency Level": "={{$json.urgency_level}}",
+            "Lead Summary": "={{ $json.lead_summary }}",
+            "Recommended Next Action": "={{ $json.recommended_next_action }}",
+            "Booking Status": "={{ $json.booking_status }}",
+            "Follow-Up Status": "={{ $json.follow_up_status }}",
+            "Notes": "={{[$json.extra_notes, $json.reason_for_score].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date Submitted",
+              "displayName": "Date Submitted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Preferred Schedule",
+              "displayName": "Preferred Schedule",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget Range",
+              "displayName": "Budget Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency Level",
+              "displayName": "Urgency Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Summary",
+              "displayName": "Lead Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommended Next Action",
+              "displayName": "Recommended Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Booking Status",
+              "displayName": "Booking Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow-Up Status",
+              "displayName": "Follow-Up Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6a94aaaa-9a30-4a14-bb9d-6366d57e6be1",
+      "name": "Append Lead to Sheets - Hot",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        1984
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date Submitted": "={{$json.date_submitted}}",
+            "Full Name": "={{$json.full_name}}",
+            "Email": "={{$json.email}}",
+            "Phone": "={{$json.phone}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Property Type": "={{$json.property_type}}",
+            "Location": "={{$json.location}}",
+            "Preferred Schedule": "={{$json.preferred_schedule}}",
+            "Budget Range": "={{$json.budget_range}}",
+            "Urgency": "={{$json.urgency}}",
+            "Source": "={{$json.source}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Urgency Level": "={{$json.urgency_level}}",
+            "Lead Summary": "={{$json.lead_summary}}",
+            "Recommended Next Action": "={{$json.recommended_next_action}}",
+            "Booking Status": "={{$json.booking_status}}",
+            "Follow-Up Status": "={{$json.follow_up_status}}",
+            "Notes": "={{[$json.extra_notes, $json.reason_for_score].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date Submitted",
+              "displayName": "Date Submitted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Preferred Schedule",
+              "displayName": "Preferred Schedule",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Budget Range",
+              "displayName": "Budget Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Urgency Level",
+              "displayName": "Urgency Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Summary",
+              "displayName": "Lead Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Recommended Next Action",
+              "displayName": "Recommended Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Booking Status",
+              "displayName": "Booking Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Follow-Up Status",
+              "displayName": "Follow-Up Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c8056414-6627-4ab6-a535-ee3e2e6935ce",
+      "name": "Append Lead to Sheets - Warm",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        2208
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date Submitted": "={{$json.date_submitted}}",
+            "Full Name": "={{$json.full_name}}",
+            "Email": "={{$json.email}}",
+            "Phone": "={{$json.phone}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Property Type": "={{$json.property_type}}",
+            "Location": "={{$json.location}}",
+            "Preferred Schedule": "={{$json.preferred_schedule}}",
+            "Budget Range": "={{$json.budget_range}}",
+            "Urgency": "={{$json.urgency}}",
+            "Source": "={{$json.source}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Urgency Level": "={{$json.urgency_level}}",
+            "Lead Summary": "={{$json.lead_summary}}",
+            "Recommended Next Action": "={{$json.recommended_next_action}}",
+            "Booking Status": "={{$json.booking_status}}",
+            "Follow-Up Status": "={{$json.follow_up_status}}",
+            "Notes": "={{[$json.extra_notes, $json.reason_for_score].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date Submitted",
+              "displayName": "Date Submitted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Preferred Schedule",
+              "displayName": "Preferred Schedule",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Budget Range",
+              "displayName": "Budget Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Urgency Level",
+              "displayName": "Urgency Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Summary",
+              "displayName": "Lead Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Recommended Next Action",
+              "displayName": "Recommended Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Booking Status",
+              "displayName": "Booking Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Follow-Up Status",
+              "displayName": "Follow-Up Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a8d278d3-06d6-4243-8006-741b8a84dc49",
+      "name": "Append Lead to Sheets - Cold",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        2416
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date Submitted": "={{$json.date_submitted}}",
+            "Full Name": "={{$json.full_name}}",
+            "Email": "={{$json.email}}",
+            "Phone": "={{$json.phone}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Property Type": "={{$json.property_type}}",
+            "Location": "={{$json.location}}",
+            "Preferred Schedule": "={{$json.preferred_schedule}}",
+            "Budget Range": "={{$json.budget_range}}",
+            "Urgency": "={{$json.urgency}}",
+            "Source": "={{$json.source}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Urgency Level": "={{$json.urgency_level}}",
+            "Lead Summary": "={{$json.lead_summary}}",
+            "Recommended Next Action": "={{$json.recommended_next_action}}",
+            "Booking Status": "={{$json.booking_status}}",
+            "Follow-Up Status": "={{$json.follow_up_status}}",
+            "Notes": "={{[$json.extra_notes, $json.reason_for_score].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date Submitted",
+              "displayName": "Date Submitted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Preferred Schedule",
+              "displayName": "Preferred Schedule",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Budget Range",
+              "displayName": "Budget Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Urgency Level",
+              "displayName": "Urgency Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Summary",
+              "displayName": "Lead Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Recommended Next Action",
+              "displayName": "Recommended Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Booking Status",
+              "displayName": "Booking Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Follow-Up Status",
+              "displayName": "Follow-Up Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b888cf31-95a5-4201-9431-ff911c4f95c6",
+      "name": "Append Lead to Sheets - Manual",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        2640
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Follow Up Tasks",
+          "mode": "name",
+          "cachedResultName": "Follow Up Tasks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Created Date": "={{$json.date_submitted}}",
+            "Lead Name": "={{$json.full_name}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Phone": "={{$json.phone}}",
+            "Email": "={{$json.email}}",
+            "Preferred Date": "={{$json.preferred_schedule}}",
+            "Task Status": "={{$json.task_status}}",
+            "Next Follow-Up": "={{$json.next_follow_up}}",
+            "Owner": "={{$json.task_owner}}",
+            "Notes": "={{[$json.recommended_next_action, $json.reason_for_score, $json.extra_notes].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Created Date",
+              "displayName": "Created Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Name",
+              "displayName": "Lead Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Preferred Date",
+              "displayName": "Preferred Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Task Status",
+              "displayName": "Task Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Follow-Up",
+              "displayName": "Next Follow-Up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "96f1d468-57bd-4305-9be6-fb76f619c57f",
+      "name": "Create Follow-Up Task - Hot",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3760,
+        1984
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Follow Up Tasks",
+          "mode": "name",
+          "cachedResultName": "Follow Up Tasks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Created Date": "={{$json.date_submitted}}",
+            "Lead Name": "={{$json.full_name}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Phone": "={{$json.phone}}",
+            "Email": "={{$json.email}}",
+            "Preferred Date": "={{$json.preferred_schedule}}",
+            "Task Status": "={{$json.task_status}}",
+            "Next Follow-Up": "={{$json.next_follow_up}}",
+            "Owner": "={{$json.task_owner}}",
+            "Notes": "={{[$json.recommended_next_action, $json.reason_for_score, $json.extra_notes].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Created Date",
+              "displayName": "Created Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Name",
+              "displayName": "Lead Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Preferred Date",
+              "displayName": "Preferred Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Task Status",
+              "displayName": "Task Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Next Follow-Up",
+              "displayName": "Next Follow-Up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "463fe182-8cfa-4fb0-8b35-b7b5f8f92ffc",
+      "name": "Create Follow-Up Task - Warm",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3760,
+        2208
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Follow Up Tasks",
+          "mode": "name",
+          "cachedResultName": "Follow Up Tasks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Created Date": "={{$json.date_submitted}}",
+            "Lead Name": "={{$json.full_name}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Phone": "={{$json.phone}}",
+            "Email": "={{$json.email}}",
+            "Preferred Date": "={{$json.preferred_schedule}}",
+            "Task Status": "={{$json.task_status}}",
+            "Next Follow-Up": "={{$json.next_follow_up}}",
+            "Owner": "={{$json.task_owner}}",
+            "Notes": "={{[$json.recommended_next_action, $json.reason_for_score, $json.extra_notes].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Created Date",
+              "displayName": "Created Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Name",
+              "displayName": "Lead Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Preferred Date",
+              "displayName": "Preferred Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Task Status",
+              "displayName": "Task Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Next Follow-Up",
+              "displayName": "Next Follow-Up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2a36cf76-2768-4e53-956c-1d56140a1355",
+      "name": "Create Follow-Up Task - Manual",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3760,
+        2640
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "CRM Pipeline",
+          "mode": "name",
+          "cachedResultName": "CRM Pipeline"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date Created": "={{$json.date_submitted}}",
+            "Contact Name": "={{$json.full_name}}",
+            "Email": "={{$json.email}}",
+            "Phone": "={{$json.phone}}",
+            "Pipeline Stage": "={{$json.crm_stage}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Last Activity": "={{$json.last_activity}}",
+            "Next Action": "={{$json.recommended_next_action}}",
+            "Source": "={{$json.source}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date Created",
+              "displayName": "Date Created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Contact Name",
+              "displayName": "Contact Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pipeline Stage",
+              "displayName": "Pipeline Stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Activity",
+              "displayName": "Last Activity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Next Action",
+              "displayName": "Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "932a2452-1ec6-494e-8529-7ef35e67ac74",
+      "name": "Append CRM Pipeline Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2528,
+        2304
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "Automatically captures cleaning-business leads, normalizes form data, scores each lead, sends the correct response email, writes to Google Sheets, creates follow-up tasks, and updates a CRM pipeline tab. Before activating, replace/verify the Google Sheets document ID and reconnect SMTP/Google credentials.\n\nGoogle Calendar node is ENABLED. Connect a Google Calendar OAuth credential in n8n before activating the workflow. Events are created only when Preferred Schedule can be parsed as a date/time.",
+        "height": 112,
+        "width": 480,
+        "color": 4
+      },
+      "id": "a926d4aa-3a76-45b6-a5a5-d96bc9d5529c",
+      "name": "README - Free Portfolio Demo1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        1792
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e831efe-29c8-47d9-b032-d10d1b6b64e7",
+              "name": "full_name",
+              "value": "={{$json.body?.full_name || $json.full_name || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "223c5f31-86f4-4212-85b4-6bbaf9a6e599",
+              "name": "email",
+              "value": "={{$json.body?.email || $json.email || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "118563d1-a82f-47a6-a0d9-b45caf3447c1",
+              "name": "phone",
+              "value": "={{$json.body?.phone || $json.phone || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "32328139-60ef-4e89-847c-3df0e3b0a998",
+              "name": "service_needed",
+              "value": "={{$json.body?.service_needed || $json.service_needed || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "9452cf11-e87e-4553-a12c-5a94fdeb2c0f",
+              "name": "property_type",
+              "value": "={{$json.body?.property_type || $json.property_type || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "8501b44a-5481-448f-950a-65c2ee0ffa28",
+              "name": "location",
+              "value": "={{$json.body?.location || $json.location || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "8f5ace5b-550d-4bfc-bdaa-fee1045d7185",
+              "name": "preferred_schedule",
+              "value": "={{$json.body?.preferred_schedule || $json.preferred_schedule || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "6e3b6277-9edd-479d-a019-36c4cd1c8f8e",
+              "name": "budget_range",
+              "value": "={{$json.body?.budget_range || $json.budget_range || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "ab9dcbe6-2f51-4c52-8a12-3f1c8fc4209a",
+              "name": "urgency",
+              "value": "={{$json.body?.urgency || $json.urgency || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "81f1baea-f630-47ec-8616-9c5d93ca74bc",
+              "name": "source",
+              "value": "={{$json.body?.source || $json.source || 'Website/Form'}}",
+              "type": "string"
+            },
+            {
+              "id": "ec80c708-d252-4814-bf67-a07acaebb0b2",
+              "name": "extra_notes",
+              "value": "={{$json.body?.extra_notes || $json.extra_notes || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "c3c7bbfa-b396-4cc4-b7a3-65a7236978a6",
+              "name": "calendar_booking_link",
+              "value": "https://calendly.com/your-business/cleaning-consultation",
+              "type": "string"
+            },
+            {
+              "id": "51126ecd-2d05-4aba-9b40-b44aec329e75",
+              "name": "owner_email",
+              "value": "hello@your-cleaning-business.com",
+              "type": "string"
+            },
+            {
+              "id": "6c8e334b-dd63-4e36-b862-031cec8037ac",
+              "name": "task_owner",
+              "value": "Business Owner",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07a7343d-1e46-412f-82e3-fcebe924be65",
+      "name": "New Cleaning Lead Received",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        2048
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node: Rule-Based Lead Qualification - Free\n// Purpose: Score cleaning service leads as Hot, Warm, Cold, or Needs Manual Review\n\nconst lead = $input.first().json;\n\nfunction clean(value) {\n  return String(value || '').trim();\n}\n\nconst fullName = clean(lead.full_name);\nconst firstName = fullName ? fullName.split(/\\s+/)[0] : 'there';\nconst email = clean(lead.email);\nconst phone = clean(lead.phone);\nconst service = clean(lead.service_needed);\nconst propertyType = clean(lead.property_type);\nconst location = clean(lead.location);\nconst schedule = clean(lead.preferred_schedule);\nconst budget = clean(lead.budget_range);\nconst urgency = clean(lead.urgency);\nconst source = clean(lead.source);\nconst notes = clean(lead.extra_notes);\n\nconst missingFields = [];\n\nfor (const field of ['full_name', 'email', 'phone', 'service_needed']) {\n  if (!clean(lead[field])) {\n    missingFields.push(field);\n  }\n}\n\nconst combined = `${service} ${propertyType} ${location} ${schedule} ${budget} ${notes}`.toLowerCase();\nconst selectedUrgency = urgency.toLowerCase();\n\nconst urgentWords = [\n  'urgent',\n  'asap',\n  'today',\n  'tomorrow',\n  'this weekend',\n  'weekend',\n  'same day',\n  'move-out',\n  'move out',\n  'move-in',\n  'move in',\n  'end of lease',\n  'inspection',\n  'handover',\n  'turnover',\n  'before guest',\n  'before arrival',\n  'before moving',\n  'immediately'\n];\n\nconst warmWords = [\n  'next week',\n  'quote',\n  'estimate',\n  'pricing',\n  'interested',\n  'available',\n  'schedule',\n  'monthly',\n  'weekly',\n  'regular',\n  'looking for',\n  'can you help'\n];\n\nconst coldWords = [\n  'just checking',\n  'just browsing',\n  'maybe',\n  'later',\n  'not sure',\n  'not ready',\n  'cheap',\n  'cheapest',\n  'lowest',\n  'free',\n  'no budget',\n  'no budget yet',\n  'next month',\n  'someday',\n  'only asking',\n  'for future reference'\n];\n\nconst clearServiceWords = [\n  'deep',\n  'move',\n  'move-out',\n  'move out',\n  'move-in',\n  'move in',\n  'office',\n  'weekly',\n  'one-time',\n  'one time',\n  'regular',\n  'post-construction',\n  'construction',\n  'airbnb',\n  'rental',\n  'apartment',\n  'house',\n  'condo'\n];\n\nconst hasUrgentIntent = urgentWords.some(word => combined.includes(word));\nconst hasWarmIntent = warmWords.some(word => combined.includes(word));\nconst hasColdIntent = coldWords.some(word => combined.includes(word));\nconst hasClearService = clearServiceWords.some(word => combined.includes(word));\n\nconst hasCompleteContact = Boolean(fullName && email && phone);\nconst hasBasicLeadDetails = Boolean(service && location);\nconst hasScheduleAndBudget = Boolean(schedule && budget);\nconst hasStrongLeadInfo = Boolean(hasCompleteContact && hasBasicLeadDetails && hasScheduleAndBudget);\n\nlet scorePoints = 0;\n\nif (fullName) scorePoints += 1;\nif (email) scorePoints += 1;\nif (phone) scorePoints += 1;\nif (service) scorePoints += 2;\nif (location) scorePoints += 1;\nif (schedule) scorePoints += 1;\nif (budget) scorePoints += 1;\nif (hasUrgentIntent) scorePoints += 3;\nif (hasWarmIntent) scorePoints += 1;\nif (hasClearService) scorePoints += 1;\nif (hasColdIntent) scorePoints -= 3;\nif (missingFields.length > 0) scorePoints -= 4;\n\n// Determine urgency level.\n// The selected form urgency is prioritized first.\nlet urgencyLevel = 'Low';\n\nif (selectedUrgency.includes('high')) {\n  urgencyLevel = 'High';\n} else if (selectedUrgency.includes('medium')) {\n  urgencyLevel = 'Medium';\n} else if (selectedUrgency.includes('low')) {\n  urgencyLevel = 'Low';\n} else if (hasUrgentIntent) {\n  urgencyLevel = 'High';\n} else if (hasWarmIntent || schedule) {\n  urgencyLevel = 'Medium';\n}\n\n// Determine lead score.\n// Final rules:\n// 1. Missing required info = Needs Manual Review\n// 2. High urgency + cold/unclear intent = Warm, not Cold\n// 3. Low/Medium urgency + cold intent = Cold\n// 4. High urgency + strong complete details = Hot\n// 5. Medium/Low urgency + complete enough details = Warm\n// 6. Weak or vague lead = Cold\n\nlet leadScore = 'Cold';\n\nif (missingFields.length > 0) {\n  leadScore = 'Needs Manual Review';\n} else if (hasColdIntent && urgencyLevel === 'High') {\n  leadScore = 'Warm';\n} else if (hasColdIntent && urgencyLevel !== 'High') {\n  leadScore = 'Cold';\n} else if (urgencyLevel === 'High' && scorePoints >= 7 && hasStrongLeadInfo) {\n  leadScore = 'Hot';\n} else if (urgencyLevel === 'Medium' && scorePoints >= 5) {\n  leadScore = 'Warm';\n} else if (urgencyLevel === 'Low' && scorePoints >= 5) {\n  leadScore = 'Warm';\n} else {\n  leadScore = 'Cold';\n}\n\nconst leadSummary = `${fullName || 'A new lead'} requested ${service || 'a cleaning service'}${propertyType ? ' for a ' + propertyType : ''}${location ? ' in ' + location : ''}${schedule ? ' with preferred schedule: ' + schedule : ''}.`;\n\nconst actions = {\n  Hot: 'Send booking link immediately, notify the owner, and follow up within 1 business hour.',\n  Warm: 'Ask one qualifying question, provide service information, and follow up within 24 hours.',\n  Cold: 'Send a polite reply and keep the lead in the nurture list.',\n  'Needs Manual Review': 'Review missing lead details manually before sending a final quote or booking link.'\n};\n\nconst bookingStatus =\n  leadScore === 'Hot'\n    ? 'Booking Link Sent'\n    : leadScore === 'Warm'\n      ? 'Needs Follow-Up'\n      : leadScore === 'Cold'\n        ? 'Nurture'\n        : 'Manual Review';\n\nconst followUpStatus =\n  leadScore === 'Hot'\n    ? 'Follow up after booking link'\n    : leadScore === 'Warm'\n      ? 'Ask qualifying question'\n      : leadScore === 'Cold'\n        ? 'Low priority nurture'\n        : 'Check missing information';\n\nconst crmStage =\n  leadScore === 'Hot'\n    ? 'Appointment Booking'\n    : leadScore === 'Warm'\n      ? 'AI Qualified'\n      : leadScore === 'Cold'\n        ? 'Nurture'\n        : 'New Lead - Manual Review';\n\nconst taskStatus =\n  leadScore === 'Hot'\n    ? 'High Priority'\n    : leadScore === 'Warm'\n      ? 'Needs Follow-Up'\n      : leadScore === 'Cold'\n        ? 'Low Priority'\n        : 'Manual Review';\n\nconst followUpPriority =\n  leadScore === 'Hot'\n    ? 'High'\n    : leadScore === 'Warm'\n      ? 'Medium'\n      : leadScore === 'Needs Manual Review'\n        ? 'High'\n        : 'Low';\n\nconst nextFollowUpHours =\n  leadScore === 'Hot'\n    ? 2\n    : leadScore === 'Warm'\n      ? 24\n      : leadScore === 'Needs Manual Review'\n        ? 4\n        : 72;\n\nconst nextFollowUp = new Date(Date.now() + nextFollowUpHours * 60 * 60 * 1000).toISOString();\nconst dateSubmitted = new Date().toISOString();\n\nconst calendarBookingLink = lead.calendar_booking_link || 'https://calendar.google.com';\n\nconst emailTemplates = {\n  Hot: {\n    subject: 'Book Your Cleaning Service Appointment',\n    body: `Hi ${firstName},\n\nThank you for reaching out to CleanPro.\n\nWe received your request for ${service || 'cleaning service'}${location ? ' in ' + location : ''}. Based on your preferred schedule, your request looks time-sensitive, so you can book your cleaning appointment here:\n\n${calendarBookingLink}\n\nAfter you choose a time, our team will review your details and confirm the appointment.\n\nBest,\nCleanPro Team`\n  },\n\n  Warm: {\n    subject: 'Quick Question About Your Cleaning Request',\n    body: `Hi ${firstName},\n\nThank you for contacting CleanPro.\n\nWe received your request for ${service || 'cleaning service'}${location ? ' in ' + location : ''}. To recommend the best cleaning option, could you please confirm your preferred cleaning date and approximate property size?\n\nOnce we have those details, we can help you choose the right service.\n\nBest,\nCleanPro Team`\n  },\n\n  Cold: {\n    subject: 'Thanks for Contacting CleanPro',\n    body: `Hi ${firstName},\n\nThank you for reaching out to CleanPro.\n\nWe received your cleaning service inquiry. When you are ready, you can reply to this email with more details about your preferred schedule, property type, and cleaning needs.\n\nWe’ll be happy to help.\n\nBest,\nCleanPro Team`\n  },\n\n  'Needs Manual Review': {\n    subject: 'We Received Your Cleaning Request',\n    body: `Hi ${firstName},\n\nThank you for contacting CleanPro.\n\nWe received your inquiry, but our team needs to review a few details before sending the best next step. We will check your request and follow up shortly.\n\nBest,\nCleanPro Team`\n  }\n};\n\nlet hasBookableSchedule = false;\nlet calendarStart = '';\nlet calendarEnd = '';\nlet preferredScheduleDisplay = schedule;\n\n// Default timezone for the demo business/location. Davao City uses Philippine Time.\n// Change this offset if your cleaning business uses another timezone.\nconst calendarTimeZoneOffset = '+08:00';\nconst calendarTimeZone = 'Asia/Manila';\n\nfunction pad2(value) {\n  return String(value).padStart(2, '0');\n}\n\nfunction offsetToMinutes(offset) {\n  const match = String(offset).match(/^([+-])(\\d{2}):(\\d{2})$/);\n  if (!match) return 0;\n  const sign = match[1] === '-' ? -1 : 1;\n  return sign * (Number(match[2]) * 60 + Number(match[3]));\n}\n\nfunction formatDateInOffset(date, offset) {\n  const offsetMinutes = offsetToMinutes(offset);\n  const shifted = new Date(date.getTime() + offsetMinutes * 60 * 1000);\n  return shifted.toISOString().slice(0, 19) + offset;\n}\n\nfunction formatScheduleDisplay(year, month, day, hour24, minute) {\n  const suffix = hour24 >= 12 ? 'PM' : 'AM';\n  const hour12 = hour24 % 12 || 12;\n  return `${year}-${month}-${day} ${hour12}:${minute} ${suffix}`;\n}\n\nfunction parsePreferredScheduleToCalendar(scheduleValue) {\n  const value = clean(scheduleValue);\n  if (!value) return null;\n\n  // Accepts HTML datetime-local values such as 2026-06-28T10:00\n  // and typed values such as 2026-06-28 10:00 AM.\n  const exactDateTime = value.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T\\s](\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*([AaPp][Mm])?$/);\n\n  if (exactDateTime) {\n    const year = exactDateTime[1];\n    const month = exactDateTime[2];\n    const day = exactDateTime[3];\n    let hour = Number(exactDateTime[4]);\n    const minute = exactDateTime[5];\n    const second = exactDateTime[6] || '00';\n    const ampm = exactDateTime[7] ? exactDateTime[7].toLowerCase() : '';\n\n    if (ampm === 'pm' && hour < 12) hour += 12;\n    if (ampm === 'am' && hour === 12) hour = 0;\n\n    if (hour < 0 || hour > 23) return null;\n\n    const start = `${year}-${month}-${day}T${pad2(hour)}:${minute}:${second}${calendarTimeZoneOffset}`;\n    const startDate = new Date(Date.parse(start));\n    const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);\n\n    return {\n      start,\n      end: formatDateInOffset(endDate, calendarTimeZoneOffset),\n      display: formatScheduleDisplay(year, month, day, hour, minute)\n    };\n  }\n\n  // Fallback for other parseable natural dates, for example: June 28, 2026 10:00 AM.\n  const parsedDate = Date.parse(value);\n  if (!Number.isNaN(parsedDate)) {\n    const startDate = new Date(parsedDate);\n    const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);\n    return {\n      start: startDate.toISOString(),\n      end: endDate.toISOString(),\n      display: value\n    };\n  }\n\n  return null;\n}\n\nconst parsedSchedule = parsePreferredScheduleToCalendar(schedule);\n\nif (parsedSchedule) {\n  calendarStart = parsedSchedule.start;\n  calendarEnd = parsedSchedule.end;\n  preferredScheduleDisplay = parsedSchedule.display;\n  hasBookableSchedule = true;\n}\n\nlet scoringExplanation = '';\n\nif (leadScore === 'Hot') {\n  scoringExplanation = 'Lead is urgent, complete, and appears ready to book.';\n} else if (leadScore === 'Warm') {\n  scoringExplanation = hasColdIntent && urgencyLevel === 'High'\n    ? 'Lead selected high urgency but contains unclear or price-shopping language, so it needs follow-up before booking.'\n    : 'Lead has enough information but needs follow-up before booking.';\n} else if (leadScore === 'Cold') {\n  scoringExplanation = hasColdIntent\n    ? 'Lead contains low-intent or price-shopping language such as maybe, later, cheapest, or just checking.'\n    : 'Lead does not show enough urgency or buying intent yet.';\n} else {\n  scoringExplanation = `Lead is missing required fields: ${missingFields.join(', ')}.`;\n}\n\nreturn [\n  {\n    json: {\n      ...lead,\n\n      first_name: firstName,\n      date_submitted: dateSubmitted,\n\n      lead_score: leadScore,\n      urgency_level: urgencyLevel,\n      lead_summary: leadSummary,\n      recommended_next_action: actions[leadScore],\n      follow_up_priority: followUpPriority,\n\n      reason_for_score: `Rule-based score: ${scorePoints}. ${scoringExplanation} Selected urgency: ${urgency || 'Not provided'}. Final urgency level: ${urgencyLevel}. Cold intent detected: ${hasColdIntent ? 'Yes' : 'No'}. Missing required fields: ${missingFields.length ? missingFields.join(', ') : 'None'}.`,\n\n      suggested_reply: emailTemplates[leadScore].body,\n      email_subject: emailTemplates[leadScore].subject,\n      email_body: emailTemplates[leadScore].body,\n\n      booking_status: bookingStatus,\n      follow_up_status: followUpStatus,\n      crm_stage: crmStage,\n      task_status: taskStatus,\n      next_follow_up: nextFollowUp,\n      last_activity: 'New lead captured and scored by free n8n rules engine',\n\n      missing_required_fields: missingFields.join(', '),\n      preferred_schedule_display: preferredScheduleDisplay,\n      calendar_timezone: calendarTimeZone,\n\n      has_bookable_schedule: hasBookableSchedule,\n      calendar_start: calendarStart,\n      calendar_end: calendarEnd\n    }\n  }\n];"
+      },
+      "id": "8ede346a-3b66-46b3-b025-80972ef8b9de",
+      "name": "Format Lead Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        2048
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id",
+          "cachedResultName": "Cleaning Business Lead Management System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Follow Up Tasks",
+          "mode": "name",
+          "cachedResultName": "Follow Up Tasks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Created Date": "={{$json.date_submitted}}",
+            "Lead Name": "={{$json.full_name}}",
+            "Service Needed": "={{$json.service_needed}}",
+            "Lead Score": "={{$json.lead_score}}",
+            "Phone": "={{$json.phone}}",
+            "Email": "={{$json.email}}",
+            "Preferred Date": "={{$json.preferred_schedule}}",
+            "Task Status": "={{$json.task_status}}",
+            "Next Follow-Up": "={{$json.next_follow_up}}",
+            "Owner": "={{$json.task_owner}}",
+            "Notes": "={{[$json.recommended_next_action, $json.reason_for_score, $json.extra_notes].filter(Boolean).join(' | ')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Created Date",
+              "displayName": "Created Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Name",
+              "displayName": "Lead Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Service Needed",
+              "displayName": "Service Needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Preferred Date",
+              "displayName": "Preferred Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Task Status",
+              "displayName": "Task Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Next Follow-Up",
+              "displayName": "Next Follow-Up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "483b1e6e-2539-4fa3-b44d-27b6b3877625",
+      "name": "Create Follow-Up Task - Cold",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3760,
+        2416
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "Google Sheets node compatibility fix: all Sheets nodes now use Document = By ID and Sheet = By Name. If you copied/converted the workbook to a new Google Sheet, replace the Document ID in every Google Sheets node with your current spreadsheet ID. Sheet names must remain exactly: Leads, Follow Up Tasks, CRM Pipeline.",
+        "height": 160,
+        "width": 520,
+        "color": 5
+      },
+      "id": "8b6d4d4d-85de-4e93-b9d7-3dddbbb57d42",
+      "name": "README - Google Sheets Sheet Field Fix",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        1624
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - New Free Lead": {
+      "main": [
+        [
+          {
+            "node": "New Cleaning Lead Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Lead Score": {
+      "main": [
+        [
+          {
+            "node": "Send Hot Booking Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Owner - Hot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Lead to Sheets - Hot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Follow-Up Task - Hot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warm Qualifying Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Owner - Warm",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Lead to Sheets - Warm",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Follow-Up Task - Warm",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Cold Nurture Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Lead to Sheets - Cold",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Follow-Up Task - Cold",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Manual Review Acknowledgment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Owner - Manual Review",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Lead to Sheets - Manual",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Follow-Up Task - Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Bookable Schedule?": {
+      "main": [
+        [
+          {
+            "node": "Create Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Cleaning Lead Received": {
+      "main": [
+        [
+          {
+            "node": "Format Lead Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Lead Details": {
+      "main": [
+        [
+          {
+            "node": "Route by Lead Score",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append CRM Pipeline Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Bookable Schedule?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodeGroups": [],
+  "tags": [
+    {
+      "name": "Portfolio",
+      "id": "qzzfPF3R4I9pa6VT",
+      "updatedAt": "2026-06-25T19:35:53.483Z",
+      "createdAt": "2026-06-25T19:35:53.483Z"
+    },
+    {
+      "name": "Cleaning Business",
+      "id": "wkMvqKnnQ4Y4bt0w",
+      "updatedAt": "2026-06-25T19:35:53.487Z",
+      "createdAt": "2026-06-25T19:35:53.487Z"
+    },
+    {
+      "name": "AI Automation VA",
+      "id": "zo5jC6FKEhl6qE4a",
+      "updatedAt": "2026-06-25T19:35:53.486Z",
+      "createdAt": "2026-06-25T19:35:53.486Z"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+full_name,email,phone,service_needed,property_type,location,preferred_schedule,budget_range,urgency,source,extra_notes
+Maya Reyes,maya.reyes@example.com,+63 917 555 0191,Move-out deep cleaning,2-bedroom apartment,Davao City,2026-07-08T10:00,"₱3,000-₱5,000",High,Website form,End of lease inspection tomorrow; needs ASAP cleaning.
+Jon Tan,jon.tan@example.com,+63 917 555 0192,Weekly office cleaning,Small office,Davao City,2026-07-15 2:00 PM,"₱5,000-₱8,000/month",Medium,Facebook lead form,Looking for estimate and availability next week.
+Alex Cruz,alex.cruz@example.com,+63 917 555 0193,House cleaning,House,Davao City,Next month,Lowest possible price,Low,Website form,Just checking prices; maybe later.
+,missing.name@example.com,,Deep cleaning,Condo,Davao City,2026-07-12T09:30,"₱2,000-₱4,000",High,Landing page,Missing required contact details to trigger manual review.
